@@ -3,7 +3,12 @@ import 'bulma/css/bulma.css';
 import './App.scss';
 import classNames from 'classnames';
 
-type SortType = '' | 'alphabetical' | 'length';
+// 1. Оголошуємо Enum згідно з вимогами завдання
+export enum SortType {
+  Default = '',
+  Alphabetical = 'alphabetical',
+  Length = 'length',
+}
 
 export const goodsFromServer: string[] = [
   'Dumplings',
@@ -19,16 +24,33 @@ export const goodsFromServer: string[] = [
 ];
 
 export const App: React.FC = () => {
-  const [sortBy, setSortBy] = useState<SortType>('');
+  // 2. Стейт
+  const [sortType, setSortType] = useState<SortType>(SortType.Default);
   const [isReversed, setIsReversed] = useState<boolean>(false);
 
+  // 3. Функції-обробники (оголошені ДО використання, щоб ESLint був щасливий)
+  const handleSortChange = (type: SortType) => {
+    if (sortType === type) {
+      setSortType(SortType.Default);
+    } else {
+      setSortType(type);
+    }
+  };
+
+  const handleReset = () => {
+    setSortType(SortType.Default);
+    setIsReversed(false);
+  };
+
+  // 4. Обчислення похідних даних (Derived State)
+  // Це гарантує правильну чергу: спочатку сортуємо, потім крутимо
   const visibleGoods = [...goodsFromServer];
 
-  if (sortBy === 'alphabetical') {
+  if (sortType === SortType.Alphabetical) {
     visibleGoods.sort((a, b) => a.localeCompare(b));
   }
 
-  if (sortBy === 'length') {
+  if (sortType === SortType.Length) {
     visibleGoods.sort((a, b) => a.length - b.length || a.localeCompare(b));
   }
 
@@ -45,9 +67,9 @@ export const App: React.FC = () => {
         <button
           type="button"
           className={classNames('button is-info', {
-            'is-light': sortBy !== 'alphabetical',
+            'is-light': sortType !== SortType.Alphabetical,
           })}
-          onClick={() => setSortBy('alphabetical')}
+          onClick={() => handleSortChange(SortType.Alphabetical)}
         >
           Sort alphabetically
         </button>
@@ -55,9 +77,9 @@ export const App: React.FC = () => {
         <button
           type="button"
           className={classNames('button is-success', {
-            'is-light': sortBy !== 'length',
+            'is-light': sortType !== SortType.Length,
           })}
-          onClick={() => setSortBy('length')}
+          onClick={() => handleSortChange(SortType.Length)}
         >
           Sort by length
         </button>
@@ -76,10 +98,7 @@ export const App: React.FC = () => {
           <button
             type="button"
             className="button is-danger"
-            onClick={() => {
-              setSortBy('');
-              setIsReversed(false);
-            }}
+            onClick={handleReset}
           >
             Reset
           </button>
