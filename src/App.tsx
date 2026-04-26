@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import 'bulma/css/bulma.css';
 import './App.scss';
+import classNames from 'classnames';
 
-export const goodsFromServer = [
+type SortType = '' | 'alphabetical' | 'length';
+
+export const goodsFromServer: string[] = [
   'Dumplings',
   'Carrot',
   'Eggs',
@@ -15,96 +18,76 @@ export const goodsFromServer = [
   'Garlic',
 ];
 
-enum SortType {
-  Default = 'default',
-  Alphabetical = 'alphabetical',
-  Length = 'length',
-  Reverse = 'reverse',
-}
-
 export const App: React.FC = () => {
-  const [goods, setGoods] = useState<string[]>(goodsFromServer);
-  const [sortType, setSortType] = useState<SortType>(SortType.Default);
+  const [sortBy, setSortBy] = useState<SortType>('');
+  const [isReversed, setIsReversed] = useState<boolean>(false);
 
-  const reverseGoods = () => {
-    const temp = [...goods];
+  const visibleGoods = [...goodsFromServer];
 
-    temp.reverse();
+  if (sortBy === 'alphabetical') {
+    visibleGoods.sort((a, b) => a.localeCompare(b));
+  }
 
-    if (JSON.stringify(temp) === JSON.stringify(goodsFromServer)) {
-      setGoods(goodsFromServer);
-      setSortType(SortType.Default);
-    } else {
-      setGoods(temp);
-      setSortType(SortType.Reverse);
-    }
-  };
+  if (sortBy === 'length') {
+    visibleGoods.sort((a, b) => a.length - b.length || a.localeCompare(b));
+  }
 
-  const resetGoods = () => {
-    setGoods(goodsFromServer);
-    setSortType(SortType.Default);
-  };
+  if (isReversed) {
+    visibleGoods.reverse();
+  }
 
-  const sortByAlphabetical = () => {
-    const temp = [...goodsFromServer];
-
-    temp.sort((a, b) => b.localeCompare(a));
-    setGoods(temp);
-    setSortType(SortType.Alphabetical);
-  };
-
-  const length = () => {
-    const temp = [...goodsFromServer];
-
-    temp.sort((a, b) => {
-      if (b.length !== a.length) {
-        return b.length - a.length;
-      }
-
-      return b.localeCompare(a);
-    });
-
-    setGoods(temp);
-    setSortType(SortType.Length);
-  };
+  const isOriginalOrder =
+    JSON.stringify(visibleGoods) === JSON.stringify(goodsFromServer);
 
   return (
     <div className="section content">
       <div className="buttons">
         <button
-          onClick={sortByAlphabetical}
-          className={`button is-info ${sortType === SortType.Alphabetical ? 'is-active' : 'is-light'}`}
+          type="button"
+          className={classNames('button is-info', {
+            'is-light': sortBy !== 'alphabetical',
+          })}
+          onClick={() => setSortBy('alphabetical')}
         >
           Sort alphabetically
         </button>
 
         <button
-          onClick={length}
-          className={`button is-success ${sortType === SortType.Length ? 'is-active' : 'is-light'}`}
+          type="button"
+          className={classNames('button is-success', {
+            'is-light': sortBy !== 'length',
+          })}
+          onClick={() => setSortBy('length')}
         >
           Sort by length
         </button>
 
         <button
-          onClick={reverseGoods}
-          className={`button is-warning ${sortType !== SortType.Default ? 'is-active' : 'is-light'}`}
+          type="button"
+          className={classNames('button is-warning', {
+            'is-light': !isReversed,
+          })}
+          onClick={() => setIsReversed(prev => !prev)}
         >
           Reverse
         </button>
 
-        {sortType !== SortType.Default && (
+        {!isOriginalOrder && (
           <button
-            onClick={resetGoods}
             type="button"
-            className="button is-danger is-light"
+            className="button is-danger"
+            onClick={() => {
+              setSortBy('');
+              setIsReversed(false);
+            }}
           >
             Reset
           </button>
         )}
       </div>
 
-      <ul>
-        {goods.map((good: string) => (
+      <ul className="list">
+        {visibleGoods.map(good => (
           <li key={good} data-cy="Good">
             {good}
           </li>
